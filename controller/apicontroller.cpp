@@ -12,8 +12,8 @@ APIController::APIController(QObject *parent) : QObject(parent), server(nullptr)
 void APIController::registerHandlers()
 {
     // Register handlers for specific paths within the APIController
-    registerHandler("/productionOrder/hello", QSharedPointer<ProductionOrderHandler>::create());
-    registerHandler("/meterLog", QSharedPointer<MeterLogHandler>::create());
+    registerHandler("/productionOrder/", QSharedPointer<ProductionOrderHandler>::create());
+    registerHandler("/meterLog/", QSharedPointer<MeterLogHandler>::create());
     // Add more registrations as needed
 }
 
@@ -56,7 +56,14 @@ void APIController::handleRequest(QHttpRequest *request, QHttpResponse *response
     qDebug() << path;
 
     // Find the handler for the specified path
-    auto handler = handlerMap.value(path);
+    QSharedPointer<IRequestHandler> handler = nullptr;
+
+    for (auto it = handlerMap.begin(); it != handlerMap.end(); ++it) {
+        if (path.startsWith(it.key())) {
+            handler = it.value();
+            break;
+        }
+    }
 
     if (handler.isNull()) {
         // No handler found for the path, return a 404 response

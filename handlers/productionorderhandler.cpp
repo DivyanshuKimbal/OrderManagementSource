@@ -6,6 +6,8 @@
 #include <QJsonParseError>
 #include <QJsonObject>
 
+#define basePath "/productionOrder"
+
 ProductionOrderHandler::ProductionOrderHandler()
 {
 
@@ -48,26 +50,27 @@ void ProductionOrderHandler::handlePutRequest(QHttpRequest *request, QHttpRespon
 
 void ProductionOrderHandler::handlePostRequest(QHttpRequest *request, QHttpResponse *response)
 {
-    qDebug()<<request->url().path();
+    QString path = request->url().path();
+    qDebug() << path;
     request->storeBody();
     QObject::connect(request, &QHttpRequest::end, [=]() {
-        if(request->url().path()=="/api/PassFailCount")
+        if(path == QString(basePath) + "/PassFailCount")
         {
             processCountPassFail(request, response);
         }
-        else if(request->url().path()=="/api/DetailProductionLine")
+        else if(path == QString(basePath) + "/DetailProductionLine")
         {
             processDetailProductionLine(request, response);
         }
-        else if(request->url().path()=="/api/PhaseSerialFailList")
+        else if(path == QString(basePath) + "/PhaseSerialFailList")
         {
             processPhaseFailData(request, response);
         }
-        else if(request->url().path()=="/api/PassFailRatio")
+        else if(path == QString(basePath) + "/PassFailRatio")
         {
             processPhaseFailCount(request, response);
         }
-        else if(request->url().path()=="/api/LastSerialNo")
+        else if(path == QString(basePath) + "/LastSerialNo")
         {
 
         }
@@ -76,13 +79,14 @@ void ProductionOrderHandler::handlePostRequest(QHttpRequest *request, QHttpRespo
 
 void ProductionOrderHandler::handleGetRequest(QHttpRequest *request, QHttpResponse *response)
 {
-    if (request->url().path() == /*"/hello"*/  "/productionOrder/hello") {
+    QString path = request->url().path();
+    if (path == QString(basePath) + "/hello") {
         // Handle GET request for /hello endpoint
         QByteArray body = "Hello World! Divyanshu Kumar";
         response->setHeader("Content-Length", QString::number(body.size()));
         response->writeHead(200);
         response->end(body);
-    } else if (request->url().path() == "/info") {
+    } else if (path == QString(basePath) + "/info") {
         // Handle GET request for /info endpoint
         QByteArray body = "Information Endpoint";
         response->setHeader("Content-Length", QString::number(body.size()));
