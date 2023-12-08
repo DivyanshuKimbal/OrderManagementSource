@@ -1,3 +1,5 @@
+#include "productionorderbl.h"
+
 #include <QDebug>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -7,16 +9,12 @@
 #include <QSqlQuery>
 #include <QSqlError>
 
-#include "requesthandlerbl.h"
-#include "qhttpresponse.h"
-
-RequestHandlerBL::RequestHandlerBL(const QString& dbPath)
+ProductionOrderBL::ProductionOrderBL()
 {
-    m_dbmanager = new DBManager(dbPath);
-    m_dbmanager->openDatabase();
+
 }
 
-QByteArray RequestHandlerBL::getDetailProductionLineOrder(const QString& ProductionStatus, const QString& ProductionId)
+QByteArray ProductionOrderBL::getDetailProductionLineOrder(const QString& ProductionStatus, const QString& ProductionId)
 {
     QByteArray jsonData;
 
@@ -63,7 +61,7 @@ QByteArray RequestHandlerBL::getDetailProductionLineOrder(const QString& Product
     return jsonData;
 }
 
-QByteArray RequestHandlerBL::getCountPassFail(const QString& DateFrom, const QString& DateTo) {
+QByteArray ProductionOrderBL::getCountPassFail(const QString& DateFrom, const QString& DateTo) {
     // Convert QString date inputs to QDateTime
     QDateTime dateTimeFrom = QDateTime::fromString(DateFrom, "dd/MM/yyyy");
     QDateTime dateTimeTo = QDateTime::fromString(DateTo, "dd/MM/yyyy");
@@ -103,7 +101,7 @@ QByteArray RequestHandlerBL::getCountPassFail(const QString& DateFrom, const QSt
 }
 
 
-QByteArray RequestHandlerBL::getFailedData(const QString& DateFrom, const QString& DateTo) {
+QByteArray ProductionOrderBL::getFailedData(const QString& DateFrom, const QString& DateTo) {
     // Convert QString date inputs to QDateTime
     QDateTime dateTimeFrom = QDateTime::fromString(DateFrom, "dd/MM/yyyy");
     QDateTime dateTimeTo = QDateTime::fromString(DateTo, "dd/MM/yyyy");
@@ -144,7 +142,7 @@ QByteArray RequestHandlerBL::getFailedData(const QString& DateFrom, const QStrin
     QByteArray jsonData = jsonDocument.toJson();
     return jsonData;
 }
-QByteArray RequestHandlerBL::getCountByLastStageInDateRange(const QString& DateFrom, const QString& DateTo) {
+QByteArray ProductionOrderBL::getCountByLastStageInDateRange(const QString& DateFrom, const QString& DateTo) {
     // Convert DateFrom and DateTo strings to QDateTime
     QDateTime fromDate = QDateTime::fromString(DateFrom, "dd/MM/yyyy");
     QDateTime toDate = QDateTime::fromString(DateTo, "dd/MM/yyyy").addDays(1).addSecs(-1); // Adjust to end of the day

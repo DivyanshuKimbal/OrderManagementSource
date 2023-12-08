@@ -29,16 +29,23 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-    Server/BusinessLogic/dbmanager.cpp \
-    Server/BusinessLogic/requesthandler.cpp \
-    Server/BusinessLogic/requesthandlerbl.cpp \
+    businesslogic/meterlogbl.cpp \
+    businesslogic/productionorderbl.cpp \
+    controller/apicontroller.cpp \
+    handlers/meterloghandler.cpp \
+    handlers/productionorderhandler.cpp \
     main.cpp \
+    utility/dbmanager.cpp \
     widget.cpp
 
 HEADERS += \
-    Server/BusinessLogic/dbmanager.h \
-    Server/BusinessLogic/requesthandler.h \
-    Server/BusinessLogic/requesthandlerbl.h \
+    businesslogic/meterlogbl.h \
+    businesslogic/productionorderbl.h \
+    controller/apicontroller.h \
+    handlers/interface/irequesthandler.h \
+    handlers/meterloghandler.h \
+    handlers/productionorderhandler.h \
+    utility/dbmanager.h \
     widget.h
 
 FORMS += \
