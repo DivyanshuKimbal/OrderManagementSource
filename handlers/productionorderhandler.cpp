@@ -5,12 +5,15 @@
 #include <QDebug>
 #include <QJsonParseError>
 #include <QJsonObject>
+#include <QUrlQuery>
+#include <QSqlDatabase>
+#include <QSqlError>
 
 #define basePath "/productionOrder"
 
 ProductionOrderHandler::ProductionOrderHandler()
 {
-
+    m_productionOrderBL = new ProductionOrderBL();
 }
 
 void ProductionOrderHandler::handleRequest(QHttpRequest *request, QHttpResponse *response) {
@@ -80,7 +83,12 @@ void ProductionOrderHandler::handlePostRequest(QHttpRequest *request, QHttpRespo
 void ProductionOrderHandler::handleGetRequest(QHttpRequest *request, QHttpResponse *response)
 {
     QString path = request->url().path();
-    if (path == QString(basePath) + "/hello") {
+
+    if(path == QString(basePath) + "/GetOrderToView")
+    {
+        processOrderDetailView(request, response);
+    }
+    else if (path == QString(basePath) + "/hello") {
         // Handle GET request for /hello endpoint
         QByteArray body = "Hello World! Divyanshu Kumar";
         response->setHeader("Content-Length", QString::number(body.size()));
@@ -301,6 +309,23 @@ void ProductionOrderHandler::processPhaseFailCount(QHttpRequest *request, QHttpR
     qDebug() << "DateTo:" << DateTo;
 
     QByteArray jsonData = m_productionOrderBL->getCountByLastStageInDateRange(DateFrom, DateTo);
+
+    // Set response headers and send the JSON data as the response
+    response->setHeader("Content-Type", "application/json");
+    response->writeHead(QHttpResponse::STATUS_OK);
+    response->end(jsonData);
+}
+
+void ProductionOrderHandler::processOrderDetailView(QHttpRequest *request, QHttpResponse *response) {
+
+    QString query = request->url().query();
+    qDebug() << query;
+
+    QUrlQuery urlQuery(request->url());
+    QString idValue = urlQuery.queryItemValue("Id");
+
+    QByteArray jsonData = m_productionOrderBL->getOrderToView(idValue);
+
 
     // Set response headers and send the JSON data as the response
     response->setHeader("Content-Type", "application/json");

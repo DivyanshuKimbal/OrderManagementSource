@@ -13,7 +13,6 @@ class IRequestHandler : public QObject
 
 public:
     virtual void handleRequest(QHttpRequest *request, QHttpResponse *response) = 0;
-    // Add other pure virtual functions as needed for your handlers
 };
 
 #endif // IREQUESTHANDLER_H

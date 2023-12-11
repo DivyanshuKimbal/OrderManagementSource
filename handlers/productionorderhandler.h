@@ -23,6 +23,7 @@ private:
     void processPhaseFailData(QHttpRequest *request, QHttpResponse *response);
     void processDetailProductionLine(QHttpRequest *request, QHttpResponse *response);
     void processCountPassFail(QHttpRequest *request, QHttpResponse *response);
+    void processOrderDetailView(QHttpRequest *request, QHttpResponse *response);
 
     ProductionOrderBL *m_productionOrderBL;
 };

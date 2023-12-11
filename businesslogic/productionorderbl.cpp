@@ -8,17 +8,46 @@
 #include <QSqlDatabase>
 #include <QSqlQuery>
 #include <QSqlError>
+#include <QSqlRecord>
 
 ProductionOrderBL::ProductionOrderBL()
 {
+    // Check if the database connection is already open
+    if (QSqlDatabase::contains("OrderManagementConnection")) {
+        qDebug() << "Database connection already open.";
+        return;
+    }
 
+    // Add the SQLite database driver
+    dbInstance = QSqlDatabase::addDatabase("QSQLITE", "OrderManagementConnection");
+    dbInstance.setDatabaseName("OrderManagement.db");
+
+    // Open the database
+    if (!dbInstance.open()) {
+        qDebug() << "Error: Unable to open the database";
+        qDebug() << "Error details:" << dbInstance.lastError().text();
+    } else {
+        qDebug() << "Connected to the database.";
+    }
+}
+
+// Destructor
+ProductionOrderBL::~ProductionOrderBL() {
+    // Close the database connection
+    QSqlDatabase db = QSqlDatabase::database("OrderManagementConnection", false);
+    if (db.isValid() && db.isOpen()) {
+        db.close();
+        qDebug() << "Database connection closed.";
+    }
+    QSqlDatabase::removeDatabase("OrderManagementConnection");
+    qDebug() << "Removed database connection.";
 }
 
 QByteArray ProductionOrderBL::getDetailProductionLineOrder(const QString& ProductionStatus, const QString& ProductionId)
 {
     QByteArray jsonData;
 
-    QSqlQuery query;
+    QSqlQuery query(dbInstance);
 
     // Prepare the SELECT query to retrieve data based on ProductionID and ProductionStatus
     query.prepare("SELECT * FROM TABLE1 WHERE productionStatus = :status AND productionID = :id");
@@ -67,7 +96,7 @@ QByteArray ProductionOrderBL::getCountPassFail(const QString& DateFrom, const QS
     QDateTime dateTimeTo = QDateTime::fromString(DateTo, "dd/MM/yyyy");
 
     // Prepare the SQL query to count 'Failed' and 'Passed' results within the specified date range
-    QSqlQuery query;
+    QSqlQuery query(dbInstance);
     QString countQuery = QString("SELECT COUNT(CASE WHEN result='Failed' THEN 1 END) as failedCount, "
                                  "COUNT(CASE WHEN result='Passed' THEN 1 END) as passedCount "
                                  "FROM TABLE2 WHERE datetime BETWEEN :dateFrom AND :dateTo");
@@ -100,14 +129,13 @@ QByteArray ProductionOrderBL::getCountPassFail(const QString& DateFrom, const QS
     return jsonData;
 }
 
-
 QByteArray ProductionOrderBL::getFailedData(const QString& DateFrom, const QString& DateTo) {
     // Convert QString date inputs to QDateTime
     QDateTime dateTimeFrom = QDateTime::fromString(DateFrom, "dd/MM/yyyy");
     QDateTime dateTimeTo = QDateTime::fromString(DateTo, "dd/MM/yyyy");
 
     // Prepare the SQL query to retrieve all data for 'Failed' results within the specified date range
-    QSqlQuery query;
+    QSqlQuery query(dbInstance);
     QString selectQuery = QString("SELECT * FROM TABLE2 WHERE result='Failed' AND datetime BETWEEN :dateFrom AND :dateTo");
     query.prepare(selectQuery);
     query.bindValue(":dateFrom", dateTimeFrom);
@@ -142,13 +170,14 @@ QByteArray ProductionOrderBL::getFailedData(const QString& DateFrom, const QStri
     QByteArray jsonData = jsonDocument.toJson();
     return jsonData;
 }
+
 QByteArray ProductionOrderBL::getCountByLastStageInDateRange(const QString& DateFrom, const QString& DateTo) {
     // Convert DateFrom and DateTo strings to QDateTime
     QDateTime fromDate = QDateTime::fromString(DateFrom, "dd/MM/yyyy");
     QDateTime toDate = QDateTime::fromString(DateTo, "dd/MM/yyyy").addDays(1).addSecs(-1); // Adjust to end of the day
 
     // Prepare the SQL query to get count of Passed and Failed results in the date range grouped by lastStage
-    QSqlQuery query;
+    QSqlQuery query(dbInstance);
     QString selectQuery = QString("SELECT lastStage, "
                                   "SUM(CASE WHEN result = 'Passed' THEN 1 ELSE 0 END) AS PassedCount, "
                                   "SUM(CASE WHEN result = 'Failed' THEN 1 ELSE 0 END) AS FailedCount "
@@ -177,6 +206,82 @@ QByteArray ProductionOrderBL::getCountByLastStageInDateRange(const QString& Date
 
     QJsonObject jsonObject;
     jsonObject["data"] = jsonArray;
+    // Create a JSON document with the array of counts by lastStage within the date range
+    QJsonDocument jsonDocument(jsonObject);
+    return jsonDocument.toJson();
+}
+
+QByteArray ProductionOrderBL::getOrderToView(const QString& idValue) {
+    QSqlQuery query(dbInstance);
+//    QString selectQuery = QString("SELECT * "
+//                                  "FROM ProductionOrder "
+//                                  "WHERE moid = '%1'")
+//                            .arg(idValue);
+
+    QString selectQuery = QString("SELECT "
+                                  "moid, "
+                                  "client, "
+                                  "manufacturer, "
+                                  "poNumber, "
+                                  "loaNumber, "
+                                  "loaNumber2, "
+                                  "manufacturingOrderNumber, "
+                                  "meterType, "
+                                  "modelNumber, "
+                                  "orderSize, "
+                                  "orderDate, "
+                                  "dispatchDate, "
+                                  "productionLine, "
+                                  "status, "
+                                  "productionStatus, "
+                                  "approval_Status, "
+                                  "prefix, "
+                                  "sequenceFrom, "
+                                  "sequenceTo, "
+                                  "comment, "
+                                  "utility, "
+                                  "meterSealCount, "
+                                  "creatorUserId, "
+                                  "canEdit, "
+                                  "amisp, "
+                                  "consigneeName, "
+                                  "addressLine1, "
+                                  "addressLine2, "
+                                  "city, "
+                                  "state, "
+                                  "zipCode, "
+                                  "contactNumber, "
+                                  "meterFirmwareVersion, "
+                                  "rfFirmwareVersion "
+                                  "FROM ProductionOrder "
+                                  "WHERE moid = '%1'")
+                            .arg(idValue);
+
+
+
+    if (!query.exec(selectQuery)) {
+        qDebug() << "Error executing query - " << query.lastError().text();
+        return QByteArray(); // Return an empty JSON object
+    }
+
+    // Retrieve column names from the query result
+    QSqlRecord record = query.record();
+    int columnCount = record.count();
+
+    // Create a JSON array to store the result
+    QJsonObject jsonObject;
+
+    query.next();
+
+    // Dynamically retrieve column names and values
+    for (int i = 0; i < columnCount; ++i) {
+        QString columnName = record.fieldName(i);
+        QVariant columnValue = query.value(i);
+
+        // Add the column name and value to the JSON object
+        jsonObject[columnName] = QJsonValue::fromVariant(columnValue);
+    }
+
     // Create a JSON document with the array of counts by lastStage within the date range
     QJsonDocument jsonDocument(jsonObject);
     return jsonDocument.toJson();
