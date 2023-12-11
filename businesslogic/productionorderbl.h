@@ -14,7 +14,9 @@ public:
     QByteArray getCountPassFail(const QString& DateFrom, const QString& DateTo);
     QByteArray getFailedData(const QString& DateFrom, const QString& DateTo);
     QByteArray getCountByLastStageInDateRange(const QString& DateFrom, const QString& DateTo);
-    QByteArray getOrderToView(const QString& idValue);
+    QByteArray getOrderToView(const QString& productionLine);
+
+    bool updateProductionStatus(const QString& moid, const QString& status);
 
 private:
     QSqlDatabase dbInstance;

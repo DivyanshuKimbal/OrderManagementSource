@@ -48,7 +48,21 @@ void ProductionOrderHandler::handleDeleteRequest(QHttpRequest *request, QHttpRes
 
 void ProductionOrderHandler::handlePutRequest(QHttpRequest *request, QHttpResponse *response)
 {
-    return;
+    QString path = request->url().path();
+    qDebug() << path;
+    request->storeBody();
+    QObject::connect(request, &QHttpRequest::end, [=]() {
+        if(path == QString(basePath) + "/updateProductionStatus")
+        {
+            processUpdateProductionStatus(request, response);
+        }
+        else
+        {
+            // Handle other endpoints
+            response->writeHead(404);
+            response->end(QByteArray("Endpoint Not Found"));
+        }
+    });
 }
 
 void ProductionOrderHandler::handlePostRequest(QHttpRequest *request, QHttpResponse *response)
@@ -76,6 +90,12 @@ void ProductionOrderHandler::handlePostRequest(QHttpRequest *request, QHttpRespo
         else if(path == QString(basePath) + "/LastSerialNo")
         {
 
+        }
+        else
+        {
+            // Handle other endpoints
+            response->writeHead(404);
+            response->end(QByteArray("Endpoint Not Found"));
         }
     });
 }
@@ -322,13 +342,62 @@ void ProductionOrderHandler::processOrderDetailView(QHttpRequest *request, QHttp
     qDebug() << query;
 
     QUrlQuery urlQuery(request->url());
-    QString idValue = urlQuery.queryItemValue("Id");
+    QString productionLine = urlQuery.queryItemValue("productionline");
 
-    QByteArray jsonData = m_productionOrderBL->getOrderToView(idValue);
+    QByteArray jsonData = m_productionOrderBL->getOrderToView(productionLine);
 
 
     // Set response headers and send the JSON data as the response
     response->setHeader("Content-Type", "application/json");
     response->writeHead(QHttpResponse::STATUS_OK);
     response->end(jsonData);
+}
+
+void ProductionOrderHandler::processUpdateProductionStatus(QHttpRequest *request, QHttpResponse *response) {
+    QJsonParseError error;
+    QString bodyData = request->body();
+    QJsonDocument jsonDoc = QJsonDocument::fromJson(bodyData.toUtf8(), &error);
+
+    if (error.error != QJsonParseError::NoError) {
+        // JSON parsing error
+        sendJsonError(response, "Error parsing JSON: " + error.errorString());
+        return;
+    }
+
+    if (!jsonDoc.isObject()) {
+        // Invalid JSON object
+        sendJsonError(response, "Invalid JSON object.");
+        return;
+    }
+
+    // Extract DateFrom, DateTo, and api_key
+    QJsonObject jsonObj = jsonDoc.object();
+
+    if (!jsonObj.contains("id") || !jsonObj.contains("status")) {
+        // Missing required fields
+        sendJsonError(response, "Missing required fields in JSON.");
+        return;
+    }
+
+    QString moid = jsonObj.value("id").toString();
+    QString productionStatus = jsonObj.value("status").toString();
+
+    qDebug() << "id:" << moid;
+    qDebug() << "status:" << productionStatus;
+
+    bool retVal = m_productionOrderBL->updateProductionStatus(moid, productionStatus);
+
+    if(retVal) {
+        // Set response headers and send the JSON data as the response
+        response->setHeader("Content-Type", "application/json");
+        response->writeHead(QHttpResponse::STATUS_OK);
+        response->end(QString("Update Done").toLatin1());
+    }
+    else
+    {
+        // Set response headers and send the JSON data as the response
+        response->setHeader("Content-Type", "application/json");
+        response->writeHead(QHttpResponse::STATUS_NOT_MODIFIED);
+        response->end(QString("Update Failed!").toLatin1());
+    }
 }

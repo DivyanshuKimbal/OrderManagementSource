@@ -211,12 +211,8 @@ QByteArray ProductionOrderBL::getCountByLastStageInDateRange(const QString& Date
     return jsonDocument.toJson();
 }
 
-QByteArray ProductionOrderBL::getOrderToView(const QString& idValue) {
+QByteArray ProductionOrderBL::getOrderToView(const QString& productionline) {
     QSqlQuery query(dbInstance);
-//    QString selectQuery = QString("SELECT * "
-//                                  "FROM ProductionOrder "
-//                                  "WHERE moid = '%1'")
-//                            .arg(idValue);
 
     QString selectQuery = QString("SELECT "
                                   "moid, "
@@ -255,7 +251,7 @@ QByteArray ProductionOrderBL::getOrderToView(const QString& idValue) {
                                   "rfFirmwareVersion "
                                   "FROM ProductionOrder "
                                   "WHERE moid = '%1'")
-                            .arg(idValue);
+                            .arg(productionline);
 
 
 
@@ -286,3 +282,25 @@ QByteArray ProductionOrderBL::getOrderToView(const QString& idValue) {
     QJsonDocument jsonDocument(jsonObject);
     return jsonDocument.toJson();
 }
+
+bool ProductionOrderBL::updateProductionStatus(const QString& moid, const QString& productionStatus) {
+    QSqlQuery query(dbInstance);
+
+    // Use a prepared statement with placeholders
+    QString updateQuery = "UPDATE ProductionOrder SET productionStatus = :productionStatus WHERE moid = :moid";
+    query.prepare(updateQuery);
+
+    // Bind values to the placeholders
+    query.bindValue(":productionStatus", productionStatus);
+    query.bindValue(":moid", moid);
+
+    // Execute the query
+    if (query.exec()) {
+        qDebug() << "Update successful!";
+        return true;
+    } else {
+        qDebug() << "Error updating record:" << query.lastError().text();
+        return false;
+    }
+}
+
