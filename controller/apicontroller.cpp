@@ -26,22 +26,15 @@ void APIController::registerHandler(const QString &path, QSharedPointer<IRequest
 
 void APIController::startServer()
 {
-    qDebug() << "Start Server point 1";
     // Register handlers upon creation
     registerHandlers();
-
-    qDebug() << "Start Server point 2";
 
     // Initialize the server in the constructor
     server = new QHttpServer(this);
 
-    qDebug() << "Start Server point 3";
-
     // Connect the server's newRequest signal to the handleRequest slot
     connect(server, SIGNAL(newRequest(QHttpRequest*, QHttpResponse*)),
             this, SLOT(handleRequest(QHttpRequest*, QHttpResponse*)));
-
-    qDebug() << "Start Server point 4";
 
     // Start the server on port 8080
     server->listen(QHostAddress::Any, 8080);
@@ -52,8 +45,6 @@ void APIController::handleRequest(QHttpRequest *request, QHttpResponse *response
 {
     // Extract path from the incoming request URL
     QString path = request->url().path();
-
-    qDebug() << path;
 
     // Find the handler for the specified path
     QSharedPointer<IRequestHandler> handler = nullptr;

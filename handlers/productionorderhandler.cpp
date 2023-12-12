@@ -68,7 +68,6 @@ void ProductionOrderHandler::handlePutRequest(QHttpRequest *request, QHttpRespon
 void ProductionOrderHandler::handlePostRequest(QHttpRequest *request, QHttpResponse *response)
 {
     QString path = request->url().path();
-    qDebug() << path;
     request->storeBody();
     QObject::connect(request, &QHttpRequest::end, [=]() {
         if(path == QString(basePath) + "/PassFailCount")
@@ -342,10 +341,12 @@ void ProductionOrderHandler::processOrderDetailView(QHttpRequest *request, QHttp
     qDebug() << query;
 
     QUrlQuery urlQuery(request->url());
-    QString productionLine = urlQuery.queryItemValue("productionline");
+    QMap<QString, QString> queryMap;
 
-    QByteArray jsonData = m_productionOrderBL->getOrderToView(productionLine);
+    for(const auto& item : urlQuery.queryItems())
+        queryMap.insert(item.first, item.second);
 
+    QByteArray jsonData = m_productionOrderBL->getOrderToView(queryMap);
 
     // Set response headers and send the JSON data as the response
     response->setHeader("Content-Type", "application/json");

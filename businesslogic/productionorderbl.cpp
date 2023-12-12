@@ -211,49 +211,25 @@ QByteArray ProductionOrderBL::getCountByLastStageInDateRange(const QString& Date
     return jsonDocument.toJson();
 }
 
-QByteArray ProductionOrderBL::getOrderToView(const QString& productionline) {
+QByteArray ProductionOrderBL::getOrderToView(const QMap<QString, QString>& queryMap) {
     QSqlQuery query(dbInstance);
 
-    QString selectQuery = QString("SELECT "
-                                  "moid, "
-                                  "client, "
-                                  "manufacturer, "
-                                  "poNumber, "
-                                  "loaNumber, "
-                                  "loaNumber2, "
-                                  "manufacturingOrderNumber, "
-                                  "meterType, "
-                                  "modelNumber, "
-                                  "orderSize, "
-                                  "orderDate, "
-                                  "dispatchDate, "
-                                  "productionLine, "
-                                  "status, "
-                                  "productionStatus, "
-                                  "approval_Status, "
-                                  "prefix, "
-                                  "sequenceFrom, "
-                                  "sequenceTo, "
-                                  "comment, "
-                                  "utility, "
-                                  "meterSealCount, "
-                                  "creatorUserId, "
-                                  "canEdit, "
-                                  "amisp, "
-                                  "consigneeName, "
-                                  "addressLine1, "
-                                  "addressLine2, "
-                                  "city, "
-                                  "state, "
-                                  "zipCode, "
-                                  "contactNumber, "
-                                  "meterFirmwareVersion, "
-                                  "rfFirmwareVersion "
-                                  "FROM ProductionOrder "
-                                  "WHERE moid = '%1'")
-                            .arg(productionline);
+    QString selectQuery = QString("SELECT * FROM ProductionOrder ");
 
+    if(!queryMap.empty()) {
+        QString whereClauseLogic = "WHERE ";
+        QStringList columnNames = queryMap.keys();
+        for(int i = 0; i < columnNames.size(); i++) {
+            QString columnName = columnNames[i];
+            QString columnVal = queryMap.value(columnName);
+            whereClauseLogic += columnName + "=" + columnVal;
+            if(i < columnNames.size() - 1)
+                whereClauseLogic += " AND ";
+        }
+        selectQuery += whereClauseLogic;
+    }
 
+    qDebug() << "QUERY = " << selectQuery;
 
     if (!query.exec(selectQuery)) {
         qDebug() << "Error executing query - " << query.lastError().text();
@@ -265,18 +241,23 @@ QByteArray ProductionOrderBL::getOrderToView(const QString& productionline) {
     int columnCount = record.count();
 
     // Create a JSON array to store the result
-    QJsonObject jsonObject;
+    QJsonArray jsonArray;
 
-    query.next();
+    while(query.next()) {
+        // Dynamically retrieve column names and values
+        QJsonObject jsonObject;
+        for (int i = 0; i < columnCount; ++i) {
+            QString columnName = record.fieldName(i);
+            QVariant columnValue = query.value(i);
 
-    // Dynamically retrieve column names and values
-    for (int i = 0; i < columnCount; ++i) {
-        QString columnName = record.fieldName(i);
-        QVariant columnValue = query.value(i);
-
-        // Add the column name and value to the JSON object
-        jsonObject[columnName] = QJsonValue::fromVariant(columnValue);
+            // Add the column name and value to the JSON object
+            jsonObject[columnName] = QJsonValue::fromVariant(columnValue);
+        }
+        jsonArray.append(jsonObject);
     }
+
+    QJsonObject jsonObject;
+    jsonObject["record"] = jsonArray;
 
     // Create a JSON document with the array of counts by lastStage within the date range
     QJsonDocument jsonDocument(jsonObject);
