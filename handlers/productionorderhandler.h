@@ -20,10 +20,7 @@ public:
 private:
 
     void sendJsonError(QHttpResponse *response, const QString &errorMessage);
-    void processPhaseFailCount(QHttpRequest *request, QHttpResponse *response);
-    void processPhaseFailData(QHttpRequest *request, QHttpResponse *response);
-    void processDetailProductionLine(QHttpRequest *request, QHttpResponse *response);
-    void processCountPassFail(QHttpRequest *request, QHttpResponse *response);
+
     void processOrderDetailView(QHttpRequest *request, QHttpResponse *response);
 
     void processUpdateProductionStatus(QHttpRequest *request, QHttpResponse *response);

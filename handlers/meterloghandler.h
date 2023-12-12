@@ -18,6 +18,13 @@ public:
     void handleGetRequest(QHttpRequest *request, QHttpResponse *response) override;
 
 private:
+    void sendJsonError(QHttpResponse *response, const QString &errorMessage);
+
+    void processPhaseFailCount(QHttpRequest *request, QHttpResponse *response);
+    void processPhaseFailData(QHttpRequest *request, QHttpResponse *response);
+    void processDetailProductionLine(QHttpRequest *request, QHttpResponse *response);
+    void processCountPassFail(QHttpRequest *request, QHttpResponse *response);
+
     MeterLogBL *m_meterLogBL;
 };
 
