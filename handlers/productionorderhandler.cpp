@@ -73,7 +73,7 @@ void ProductionOrderHandler::handleGetRequest(QHttpRequest *request, QHttpRespon
 {
     QString path = request->url().path();
 
-    if(path == QString(basePath) + "/fetchProderOrder")
+    if(path == QString(basePath) + "/fetchProductionOrder")
     {
         processOrderDetailView(request, response);
     }
@@ -153,7 +153,7 @@ void ProductionOrderHandler::processUpdateProductionStatus(QHttpRequest *request
     // Extract DateFrom, DateTo, and api_key
     QJsonObject jsonObj = jsonDoc.object();
 
-    if (!jsonObj.contains("id") || !jsonObj.contains("status")) {
+    if (!jsonObj.contains("moid") || !jsonObj.contains("productionStatus")) {
         // Missing required fields
         sendJsonError(response, "Missing required fields in JSON.");
         return;
