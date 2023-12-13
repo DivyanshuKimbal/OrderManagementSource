@@ -73,7 +73,7 @@ void ProductionOrderHandler::handleGetRequest(QHttpRequest *request, QHttpRespon
 {
     QString path = request->url().path();
 
-    if(path == QString(basePath) + "/GetOrderToView")
+    if(path == QString(basePath) + "/fetchProderOrder")
     {
         processOrderDetailView(request, response);
     }
@@ -159,8 +159,8 @@ void ProductionOrderHandler::processUpdateProductionStatus(QHttpRequest *request
         return;
     }
 
-    QString moid = jsonObj.value("id").toString();
-    QString productionStatus = jsonObj.value("status").toString();
+    QString moid = jsonObj.value("moid").toString();
+    QString productionStatus = jsonObj.value("productionStatus").toString();
 
     qDebug() << "id:" << moid;
     qDebug() << "status:" << productionStatus;

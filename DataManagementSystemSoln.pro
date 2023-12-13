@@ -32,6 +32,7 @@ SOURCES += \
     businesslogic/meterlogbl.cpp \
     businesslogic/productionorderbl.cpp \
     controller/apicontroller.cpp \
+    handlers/authenticationhandler.cpp \
     handlers/meterloghandler.cpp \
     handlers/productionorderhandler.cpp \
     main.cpp \
@@ -42,6 +43,7 @@ HEADERS += \
     businesslogic/meterlogbl.h \
     businesslogic/productionorderbl.h \
     controller/apicontroller.h \
+    handlers/authenticationhandler.h \
     handlers/interface/irequesthandler.h \
     handlers/meterloghandler.h \
     handlers/productionorderhandler.h \
