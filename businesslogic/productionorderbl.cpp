@@ -46,14 +46,29 @@ ProductionOrderBL::~ProductionOrderBL() {
 QByteArray ProductionOrderBL::getOrderToView(const QMap<QString, QString>& queryMap) {
     QSqlQuery query(dbInstance);
 
+    query.exec("PRAGMA table_info(ProductionOrder)");
+
+    QMap<QString, QString> columnTypeMap;
+
+    while (query.next()) {
+        QString columnName = query.value(1).toString();
+        QString columnType = query.value(2).toString();
+        qDebug() << "Column Name:" << columnName << "  Type:" << columnType;
+
+        // Store column names and types in the map
+        columnTypeMap.insert(columnName, columnType);
+    }
+
     QString selectQuery = QString("SELECT * FROM ProductionOrder ");
 
-    if(!queryMap.empty()) {
+    if (!queryMap.empty()) {
         QString whereClauseLogic = "WHERE ";
         QStringList columnNames = queryMap.keys();
         for(int i = 0; i < columnNames.size(); i++) {
             QString columnName = columnNames[i];
             QString columnVal = queryMap.value(columnName);
+            if(columnTypeMap.contains(columnName) && columnTypeMap[columnName] == "TYPE")
+                columnVal = "\"" + columnVal + "\"";
             whereClauseLogic += columnName + "=" + columnVal;
             if(i < columnNames.size() - 1)
                 whereClauseLogic += " AND ";
